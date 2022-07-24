@@ -22,7 +22,7 @@ async function run() {
 
     try {
         await client.connect();
-        console.log("database connected");
+        console.log("database connected wow!!!");
 
 
     } finally {
