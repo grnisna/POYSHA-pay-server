@@ -23,7 +23,26 @@ async function run() {
     try {
         await client.connect();
         console.log("database connected wow!!!");
+        //add Money Collection
+        const addMoneyCollection = client.db('poysha_pay').collection('addMoney');
 
+
+
+        //visualize add Money all transactions
+        app.get('/addMoneyTransactions', async (req, res) => {
+            const query = {};
+            const cursor = addMoneyCollection.find(query);
+            const addMoney = await cursor.toArray();
+            res.send(addMoney)
+        })
+
+
+        //send add money data to backend from ui
+        app.post('/addMoney', async (req, res) => {
+            const addMoney = req.body;
+            const result = await addMoneyCollection.insertOne(addMoney);
+            res.send(result)
+        })
 
     } finally {
 
