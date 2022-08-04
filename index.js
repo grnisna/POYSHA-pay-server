@@ -52,7 +52,7 @@ async function run() {
             res.send(accessToken);
             
         })
-        console.log("database connected wow!!!");
+        console.log("database connected!!!");
         //add Money Collection
         const addMoneyCollection = client.db('poysha_pay').collection('addMoney');
         const transactionHistoryCollection = client.db('poysha_pay').collection('transaction_history');
