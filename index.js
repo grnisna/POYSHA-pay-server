@@ -26,6 +26,7 @@ async function run() {
         console.log("database connected wow!!!");
         //add Money Collection
         const addMoneyCollection = client.db('poysha_pay').collection('addMoney');
+        const transactionHistoryCollection = client.db('poysha_pay').collection('transaction_history');
 
 
 
@@ -42,6 +43,11 @@ async function run() {
         app.post('/addMoney', async (req, res) => {
             const addMoney = req.body;
             const result = await addMoneyCollection.insertOne(addMoney);
+            res.send(result)
+        })
+        app.post('/transaction_history', async (req, res) => {
+            const transactionHistory = req.body;
+            const result = await transactionHistoryCollection.insertOne(transactionHistory);
             res.send(result)
         })
 
