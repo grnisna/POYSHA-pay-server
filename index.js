@@ -93,5 +93,5 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => {
-    console.log(`Poysha Pay App is ready to transaction on port ${port}`)
+    console.log(`Poysha-pay App is ready to transaction on port ${port}`)
 })
