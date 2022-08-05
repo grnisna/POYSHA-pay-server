@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
@@ -34,7 +35,9 @@ app.use(express.json());
 // }
 
 
-const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0-shard-00-00.abru5.mongodb.net:27017,cluster0-shard-00-01.abru5.mongodb.net:27017,cluster0-shard-00-02.abru5.mongodb.net:27017/?ssl=true&replicaSet=atlas-ybe1bj-shard-0&authSource=admin&retryWrites=true&w=majority`;
+
+const uri = "mongodb+srv://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0.abru5.mongodb.net/?retryWrites=true&w=majority";
+// const uri = `mongodb://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0-shard-00-00.abru5.mongodb.net:27017,cluster0-shard-00-01.abru5.mongodb.net:27017,cluster0-shard-00-02.abru5.mongodb.net:27017/?ssl=true&replicaSet=atlas-ybe1bj-shard-0&authSource=admin&retryWrites=true&w=majority`;
 console.log(uri);
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
@@ -43,14 +46,46 @@ async function run() {
     try {
         await client.connect();
 
+
+        const usersCollection = client.db('poysha_pay').collection('users')
+
+        const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney')
+
+        const transationCollection = client.db('poysha_pay').collection('transation_history')
+
+        //post sendMoney//
+
+        app.post('/users', async (req, res) => {
+            const allUsers = req.body;
+            const result = await usersCollection.insertOne(allUsers);
+            res.send(result)
+        })
+
+        app.post('/sendMoney', async (req, res) => {
+            const allSendMoney = req.body;
+            const result = await sendMoneyCollection.insertOne(allSendMoney);
+            res.send(result)
+        })
+
+        app.post('/transationHistory', async (req, res) => {
+            const allTransation = req.body;
+            const result = await transationCollection.insertOne(allTransation);
+            res.send(result)
+        })
+
+
+
+
+
+
         //========== AUTHENTICATION =======================
-        app.post('/login', async(req,res)=>{
+        app.post('/login', async (req, res) => {
             const user = req.body;
-            const accessToken = jwt.sign(user,process.env.ACCESS_TOKEN,{
-                expiresIn:'1d'
+            const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN, {
+                expiresIn: '1d'
             });
             res.send(accessToken);
-            
+
         })
         console.log("database connected!!!");
         //add Money Collection
@@ -79,6 +114,7 @@ async function run() {
             const result = await transactionHistoryCollection.insertOne(transactionHistory);
             res.send(result)
         })
+
 
     } finally {
 
