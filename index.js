@@ -22,8 +22,33 @@ async function run() {
 
     try {
         await client.connect();
-        console.log("database connected wow!!!");
+        const transactionHistory = client.db("poysha_pay").collection("transaction_history");
+        const AddedAccounts = client.db("poysha_pay").collection("Added_Accounts");
 
+        app.get('/transactionHistory', async (req, res) => {
+            const query = {}
+            const cursor = transactionHistory.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        //added any account to user database
+
+        app.get('/addedAccount', async (req, res) => {
+            const accounts = await AddedAccounts.find({}).toArray();
+            res.send(accounts)
+
+            // const query = {}
+            // const cursor = AddedAccounts.find(query);
+            // const result = await cursor.toArray();
+            // res.send(result);
+        })
+
+        app.post('/addedAccount', async (req, res) => {
+            const data = req.body;
+            const addedAccount = await AddedAccounts.insertOne(data)
+            res.send(addedAccount);
+        })
 
     } finally {
 
