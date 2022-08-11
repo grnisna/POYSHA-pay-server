@@ -75,6 +75,14 @@ async function run() {
             const allTransation = req.body;
             const result = await transationCollection.insertOne(allTransation);
             res.send(result)
+        });
+
+        app.get('/sendMoney', async(req,res) =>{
+            const query = {};
+            const getAllSendmoney = sendMoneyCollection.find(query);
+            const sendMoney = await getAllSendmoney.toArray();
+            res.send(sendMoney);
+
         })
 
 
@@ -91,7 +99,7 @@ async function run() {
             res.send(accessToken);
 
         })
-        console.log("database connected!!!");
+
         //add Money Collection
         const addMoneyCollection = client.db('poysha_pay').collection('addMoney');
         const transactionHistoryCollection = client.db('poysha_pay').collection('transaction_history');
