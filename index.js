@@ -45,17 +45,11 @@ async function run() {
 
     try {
         await client.connect();
-
+        const userCollection = client.db("poysha_pay").collection("users");
         const transactionHistory = client.db("poysha_pay").collection("transaction_history");
-        const AddedAccounts = client.db("poysha_pay").collection("Added_Accounts");
-
-
-
-        const usersCollection = client.db('poysha_pay').collection('users')
-
-        const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney')
-
-        const transationCollection = client.db('poysha_pay').collection('transation_history')
+        const AddedAccounts = client.db("poysha_pay").collection("Added_Accounts");        
+        const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney');
+        const transationCollection = client.db('poysha_pay').collection('transation_history');
 
         //post sendMoney//
 
@@ -65,20 +59,17 @@ async function run() {
         //     res.send(result)
         // })
 
-        app.put('/user/:email', async( req,res) =>{
+        
+
+        app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
-            const userInfo = req.body;
-            const filter = {email:email};
-            const options = {ursert:true};
-            const updateUser = {
-                $set:{userInfo}
-            }
-
-            const result = await usersCollection.updateOne(filter,updateUser,options);
-
-            res.send(result);
-
-        })
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = { $set: user };
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            res.send({ result});
+        });
 
         app.post('/sendMoney', async (req, res) => {
             const allSendMoney = req.body;
