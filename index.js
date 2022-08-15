@@ -59,10 +59,25 @@ async function run() {
 
         //post sendMoney//
 
-        app.post('/users', async (req, res) => {
-            const allUsers = req.body;
-            const result = await usersCollection.insertOne(allUsers);
-            res.send(result)
+        // app.post('/users', async (req, res) => {
+        //     const allUsers = req.body;
+        //     const result = await usersCollection.insertOne(allUsers);
+        //     res.send(result)
+        // })
+
+        app.put('/user/:email', async( req,res) =>{
+            const email = req.params.email;
+            const userInfo = req.body;
+            const filter = {email:email};
+            const options = {ursert:true};
+            const updateUser = {
+                $set:{userInfo}
+            }
+
+            const result = await usersCollection.updateOne(filter,updateUser,options);
+
+            res.send(result);
+
         })
 
         app.post('/sendMoney', async (req, res) => {
