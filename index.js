@@ -1,13 +1,11 @@
 
 const express = require('express');
 const cors = require('cors');
+const app = express();
+const port = process.env.PORT || 5000
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion } = require('mongodb');
-
-const app = express();
-const port = process.env.PORT || 5000
-
 
 app.use(cors());
 app.use(express.json());
@@ -36,19 +34,19 @@ app.use(express.json());
 
 
 
-const uri = "mongodb+srv://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0.abru5.mongodb.net/?retryWrites=true&w=majority";
-// const uri = `mongodb://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0-shard-00-00.abru5.mongodb.net:27017,cluster0-shard-00-01.abru5.mongodb.net:27017,cluster0-shard-00-02.abru5.mongodb.net:27017/?ssl=true&replicaSet=atlas-ybe1bj-shard-0&authSource=admin&retryWrites=true&w=majority`;
-console.log(uri);
+// const uri = "mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.abru5.mongodb.net/?retryWrites=true&w=majority";
+const uri = `mongodb://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0-shard-00-00.abru5.mongodb.net:27017,cluster0-shard-00-01.abru5.mongodb.net:27017,cluster0-shard-00-02.abru5.mongodb.net:27017/?ssl=true&replicaSet=atlas-ybe1bj-shard-0&authSource=admin&retryWrites=true&w=majority`;
+
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 async function run() {
 
     try {
         await client.connect();
-        const userCollection = client.db("poysha_pay").collection("users");
-        const transactionHistory = client.db("poysha_pay").collection("transaction_history");
-        const AddedAccounts = client.db("poysha_pay").collection("Added_Accounts");        
+        const transactionHistory = client.db('poysha_pay').collection("transaction_history");
+        const AddedAccounts = client.db('poysha_pay').collection("Added_Accounts");        
         const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney');
+        const userCollection = client.db('poysha_pay').collection("users");
         const transationCollection = client.db('poysha_pay').collection('transation_history');
 
         //post sendMoney//
