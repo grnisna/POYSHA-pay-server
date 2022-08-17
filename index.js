@@ -3,11 +3,12 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
 const port = process.env.PORT || 5000
 
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 app.use(cors());
 app.use(express.json());
@@ -36,8 +37,8 @@ app.use(express.json());
 
 
 
-const uri = "mongodb+srv://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0.abru5.mongodb.net/?retryWrites=true&w=majority";
-// const uri = `mongodb://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0-shard-00-00.abru5.mongodb.net:27017,cluster0-shard-00-01.abru5.mongodb.net:27017,cluster0-shard-00-02.abru5.mongodb.net:27017/?ssl=true&replicaSet=atlas-ybe1bj-shard-0&authSource=admin&retryWrites=true&w=majority`;
+//const uri = "mongodb+srv://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0.abru5.mongodb.net/?retryWrites=true&w=majority";
+const uri = `mongodb://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0-shard-00-00.abru5.mongodb.net:27017,cluster0-shard-00-01.abru5.mongodb.net:27017,cluster0-shard-00-02.abru5.mongodb.net:27017/?ssl=true&replicaSet=atlas-ybe1bj-shard-0&authSource=admin&retryWrites=true&w=majority`;
 console.log(uri);
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
@@ -55,7 +56,7 @@ async function run() {
 
         const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney')
 
-        const transationCollection = client.db('poysha_pay').collection('transation_history')
+
 
         //post sendMoney//
 
@@ -65,17 +66,14 @@ async function run() {
             res.send(result)
         })
 
+
         app.post('/sendMoney', async (req, res) => {
             const allSendMoney = req.body;
             const result = await sendMoneyCollection.insertOne(allSendMoney);
             res.send(result)
         })
 
-        app.post('/transationHistory', async (req, res) => {
-            const allTransation = req.body;
-            const result = await transationCollection.insertOne(allTransation);
-            res.send(result)
-        })
+
 
 
 
@@ -94,9 +92,19 @@ async function run() {
         console.log("database connected!!!");
         //add Money Collection
         const addMoneyCollection = client.db('poysha_pay').collection('addMoney');
+
+        //addReviewCollection
+        const addReviewCollection = client.db('poysha_pay').collection('addReview');
         const transactionHistoryCollection = client.db('poysha_pay').collection('transaction_history');
 
 
+
+        app.get('/user', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const user = await usersCollection.findOne(query);
+            res.send(user);
+        })
 
         //visualize add Money all transactions
         app.get('/addMoneyTransactions', async (req, res) => {
@@ -105,6 +113,30 @@ async function run() {
             const addMoney = await cursor.toArray();
             res.send(addMoney)
         })
+        //all users visualization
+        app.get('/users', async (req, res) => {
+            const query = {};
+            const cursor = usersCollection.find(query);
+            const users = await cursor.toArray();
+            res.send(users)
+        })
+
+        //add Review 
+        app.post('/addReview', async (req, res) => {
+            const addReview = req.body;
+            const result = await addReviewCollection.insertOne(addReview);
+            res.send(result)
+        })
+
+        //all Review visualization
+        app.get('/addReview', async (req, res) => {
+            const query = {};
+            const cursor = addReviewCollection.find(query);
+            const addReview = await cursor.toArray();
+            res.send(addReview)
+        })
+
+
 
 
         //send add money data to backend from ui
@@ -113,6 +145,7 @@ async function run() {
             const result = await addMoneyCollection.insertOne(addMoney);
             res.send(result)
         })
+
         app.post('/transaction_history', async (req, res) => {
             const transactionHistory = req.body;
             const result = await transactionHistoryCollection.insertOne(transactionHistory);
