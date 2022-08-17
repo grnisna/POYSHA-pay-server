@@ -13,27 +13,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 app.use(cors());
 app.use(express.json());
 
-//Username:poysha_pay
-//password:ZsRHFYCpIVJa4UrI
 
-// //---------varify token --------
-// function varifyToken(req, res, next) {
-//     const getToken = req.headers.authorization;
-//     console.log(getToken);
-//     if (!getToken) {
-//         return res.status(401).send({ message: 'UnAuthorized' });
-//     }
-//     const token = getToken.split(' ')[1];
-//     jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
-//         if (err) {
-//             return res.status(403).send({ message: 'Forbidden' });
-//         }
-//         else {
-//             req.decoded = decoded;
-//             next();
-//         }
-//     })
-// }
 
 
 
@@ -74,6 +54,20 @@ async function run() {
         })
 
 
+        app.post('/transationHistory', async (req, res) => {
+            const allTransation = req.body;
+            const result = await transationCollection.insertOne(allTransation);
+            res.send(result)
+        });
+
+        app.get('/sendMoney', async (req, res) => {
+            const query = {};
+            const getAllSendmoney = sendMoneyCollection.find(query);
+            const sendMoney = await getAllSendmoney.toArray();
+            res.send(sendMoney);
+
+        })
+
 
 
 
@@ -89,7 +83,7 @@ async function run() {
             res.send(accessToken);
 
         })
-        console.log("database connected!!!");
+
         //add Money Collection
         const addMoneyCollection = client.db('poysha_pay').collection('addMoney');
 
