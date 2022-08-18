@@ -50,6 +50,7 @@ async function run() {
         const usersCollection = client.db('poysha_pay').collection('users')
         const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney')
         const transationCollection = client.db('poysha_pay').collection('transation_history')
+        const userImageCollection = client.db('poysha_pay').collection('userimages');
 
 
         //user
@@ -104,7 +105,16 @@ async function run() {
         })
 
 
+        app.post('/userimage', async (req, res) => {
+            const userimage = req.body;
+            const result = await userImageCollection.insertOne(userimage);
+            res.send(result);
+        });
 
+        app.get('/userimage', async (req, res) => {
+            const userimages = await userImageCollection.find().toArray();
+            res.send(userimages);
+        })
 
 
 
