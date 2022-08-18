@@ -79,7 +79,6 @@ async function run() {
             }
 
             const result = await usersCollection.updateOne(filter, updateUser, options);
-
             res.send(result);
 
         })
