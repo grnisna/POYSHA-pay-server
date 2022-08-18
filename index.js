@@ -45,43 +45,44 @@ async function run() {
 
     try {
         await client.connect();
+        const transactionHistory = client.db("poysha_pay").collection("transaction_history");
+        const AddedAccounts = client.db("poysha_pay").collection("Added_Accounts");
         const usersCollection = client.db('poysha_pay').collection('users')
         const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney')
         const transationCollection = client.db('poysha_pay').collection('transation_history')
         const userImageCollection = client.db('poysha_pay').collection('userimages');
 
-        //post sendMoney//
-        //creating users//
-        app.post('/users', async (req, res) => {
-            const allUsers = req.body;
-            const result = await usersCollection.insertOne(allUsers);
-            res.send(result)
+
+        //user
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            console.log("email is", email);
+            const query = { email: email };
+            const userId = usersCollection.find(query)
+            const id = await userId.toArray();
+            res.send(id)
         })
+        //post sendMoney//
 
-        // get users//
+        // app.post('/users', async (req, res) => {
+        //     const allUsers = req.body;
+        //     const result = await usersCollection.insertOne(allUsers);
+        //     res.send(result)
+        // })
 
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const userInfo = req.body;
+            const filter = { email: email };
+            const options = { ursert: true };
+            const updateUser = {
+                $set: { userInfo }
+            }
 
-        app.get('/user', async (req, res) => {
-            const users = await usersCollection.find().toArray();
-            res.send(users);
-        });
+            const result = await usersCollection.updateOne(filter, updateUser, options);
+            res.send(result);
 
-
-
-        // app.get('/service', async (req, res) => {
-        //     const query = {};
-        //     const cursor = serviceCollection.find(query);
-        //     const services = await cursor.toArray();
-        //     res.send(services);
-        // });
-
-
-
-        // app.get('/user', verifyJWT, async (req, res) => {
-        //     const users = await userCollection.find().toArray();
-        //     res.send(users);
-        // });
-
+        })
 
         app.post('/sendMoney', async (req, res) => {
             const allSendMoney = req.body;
@@ -93,6 +94,14 @@ async function run() {
             const allTransation = req.body;
             const result = await transationCollection.insertOne(allTransation);
             res.send(result)
+        });
+
+        app.get('/sendMoney', async (req, res) => {
+            const query = {};
+            const getAllSendmoney = sendMoneyCollection.find(query);
+            const sendMoney = await getAllSendmoney.toArray();
+            res.send(sendMoney);
+
         })
 
 
@@ -118,7 +127,7 @@ async function run() {
             res.send(accessToken);
 
         })
-        console.log("database connected!!!");
+
         //add Money Collection
         const addMoneyCollection = client.db('poysha_pay').collection('addMoney');
         const transactionHistoryCollection = client.db('poysha_pay').collection('transaction_history');
@@ -140,12 +149,37 @@ async function run() {
             const result = await addMoneyCollection.insertOne(addMoney);
             res.send(result)
         })
-        app.post('/transaction_history', async (req, res) => {
+        app.post('/transactionHistory', async (req, res) => {
             const transactionHistory = req.body;
             const result = await transactionHistoryCollection.insertOne(transactionHistory);
             res.send(result)
         })
 
+
+        app.get('/transactionHistory', async (req, res) => {
+            const query = {}
+            const cursor = transactionHistory.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        //added any account to user database
+
+        app.get('/addedAccount', async (req, res) => {
+            const accounts = await AddedAccounts.find({}).toArray();
+            res.send(accounts)
+
+            // const query = {}
+            // const cursor = AddedAccounts.find(query);
+            // const result = await cursor.toArray();
+            // res.send(result);
+        })
+
+        app.post('/addedAccount', async (req, res) => {
+            const data = req.body;
+            const addedAccount = await AddedAccounts.insertOne(data)
+            res.send(addedAccount);
+        })
 
     } finally {
 
@@ -156,7 +190,7 @@ async function run() {
 run().catch(console.dir);
 
 app.get('/', (req, res) => {
-    res.send('Hello BoroLoks!!!!')
+    res.send('Hello BoroLoks !!!!')
 })
 
 app.listen(port, () => {
