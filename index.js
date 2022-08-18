@@ -45,21 +45,43 @@ async function run() {
 
     try {
         await client.connect();
-
-
         const usersCollection = client.db('poysha_pay').collection('users')
-
         const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney')
-
         const transationCollection = client.db('poysha_pay').collection('transation_history')
+        const userImageCollection = client.db('poysha_pay').collection('userimages');
 
         //post sendMoney//
-
+        //creating users//
         app.post('/users', async (req, res) => {
             const allUsers = req.body;
             const result = await usersCollection.insertOne(allUsers);
             res.send(result)
         })
+
+        // get users//
+
+
+        app.get('/user', async (req, res) => {
+            const users = await usersCollection.find().toArray();
+            res.send(users);
+        });
+
+
+
+        // app.get('/service', async (req, res) => {
+        //     const query = {};
+        //     const cursor = serviceCollection.find(query);
+        //     const services = await cursor.toArray();
+        //     res.send(services);
+        // });
+
+
+
+        // app.get('/user', verifyJWT, async (req, res) => {
+        //     const users = await userCollection.find().toArray();
+        //     res.send(users);
+        // });
+
 
         app.post('/sendMoney', async (req, res) => {
             const allSendMoney = req.body;
@@ -74,7 +96,16 @@ async function run() {
         })
 
 
+        app.post('/userimage', async (req, res) => {
+            const userimage = req.body;
+            const result = await userImageCollection.insertOne(userimage);
+            res.send(result);
+        });
 
+        app.get('/userimage', async (req, res) => {
+            const userimages = await userImageCollection.find().toArray();
+            res.send(userimages);
+        })
 
 
 
