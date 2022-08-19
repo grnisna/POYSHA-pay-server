@@ -1,11 +1,13 @@
 
 const express = require('express');
 const cors = require('cors');
-const app = express();
-const port = process.env.PORT || 5000
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion } = require('mongodb');
+
+const app = express();
+const port = process.env.PORT || 5000
+
 
 app.use(cors());
 app.use(express.json());
@@ -34,21 +36,32 @@ app.use(express.json());
 
 
 
-// const uri = "mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.abru5.mongodb.net/?retryWrites=true&w=majority";
-const uri = `mongodb://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0-shard-00-00.abru5.mongodb.net:27017,cluster0-shard-00-01.abru5.mongodb.net:27017,cluster0-shard-00-02.abru5.mongodb.net:27017/?ssl=true&replicaSet=atlas-ybe1bj-shard-0&authSource=admin&retryWrites=true&w=majority`;
-
+const uri = "mongodb+srv://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0.abru5.mongodb.net/?retryWrites=true&w=majority";
+// const uri = `mongodb://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0-shard-00-00.abru5.mongodb.net:27017,cluster0-shard-00-01.abru5.mongodb.net:27017,cluster0-shard-00-02.abru5.mongodb.net:27017/?ssl=true&replicaSet=atlas-ybe1bj-shard-0&authSource=admin&retryWrites=true&w=majority`;
+console.log(uri);
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 async function run() {
 
     try {
         await client.connect();
-        const transactionHistory = client.db('poysha_pay').collection("transaction_history");
-        const AddedAccounts = client.db('poysha_pay').collection("Added_Accounts");        
-        const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney');
-        const userCollection = client.db('poysha_pay').collection("users");
-        const transationCollection = client.db('poysha_pay').collection('transation_history');
+        const transactionHistory = client.db("poysha_pay").collection("transaction_history");
+        const AddedAccounts = client.db("poysha_pay").collection("Added_Accounts");
+        const usersCollection = client.db('poysha_pay').collection('users')
+        const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney')
+        const transationCollection = client.db('poysha_pay').collection('transation_history')
+        const userImageCollection = client.db('poysha_pay').collection('userimages');
 
+
+        //user
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            console.log("email is", email);
+            const query = { email: email };
+            const userId = usersCollection.find(query)
+            const id = await userId.toArray();
+            res.send(id)
+        })
         //post sendMoney//
 
         // app.post('/users', async (req, res) => {
@@ -57,17 +70,19 @@ async function run() {
         //     res.send(result)
         // })
 
-        
-
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
-            const user = req.body;
+            const userInfo = req.body;
             const filter = { email: email };
-            const options = { upsert: true };
-            const updateDoc = { $set: user };
-            const result = await userCollection.updateOne(filter, updateDoc, options);
-            res.send({ result});
-        });
+            const options = { ursert: true };
+            const updateUser = {
+                $set: { userInfo }
+            }
+
+            const result = await usersCollection.updateOne(filter, updateUser, options);
+            res.send(result);
+
+        })
 
         app.post('/sendMoney', async (req, res) => {
             const allSendMoney = req.body;
@@ -81,7 +96,7 @@ async function run() {
             res.send(result)
         });
 
-        app.get('/sendMoney', async(req,res) =>{
+        app.get('/sendMoney', async (req, res) => {
             const query = {};
             const getAllSendmoney = sendMoneyCollection.find(query);
             const sendMoney = await getAllSendmoney.toArray();
@@ -90,7 +105,16 @@ async function run() {
         })
 
 
+        app.post('/userimage', async (req, res) => {
+            const userimage = req.body;
+            const result = await userImageCollection.insertOne(userimage);
+            res.send(result);
+        });
 
+        app.get('/userimage', async (req, res) => {
+            const userimages = await userImageCollection.find().toArray();
+            res.send(userimages);
+        })
 
 
 
@@ -125,7 +149,7 @@ async function run() {
             const result = await addMoneyCollection.insertOne(addMoney);
             res.send(result)
         })
-        app.post('/transaction_history', async (req, res) => {
+        app.post('/transactionHistory', async (req, res) => {
             const transactionHistory = req.body;
             const result = await transactionHistoryCollection.insertOne(transactionHistory);
             res.send(result)
