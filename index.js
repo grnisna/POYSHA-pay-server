@@ -107,6 +107,10 @@ async function run() {
 
         // GET TRANSACTION ALL STATEMENT ;
         app.get('/transactionStatement', async( req, res) =>{
+            const query = {};
+            const cursor = transactionHistory.find(query);
+            const count = await cursor.count();
+            res.send({count})
 
         })
 
