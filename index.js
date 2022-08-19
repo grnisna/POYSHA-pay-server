@@ -106,9 +106,9 @@ async function run() {
         });
 
         // GET TRANSACTION ALL STATEMENT ;
-        // app.get('/transactionStatement', async( req, res) =>{
+        app.get('/transactionStatement', async( req, res) =>{
 
-        // })
+        })
 
 
         app.post('/userimage', async (req, res) => {
