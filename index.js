@@ -220,10 +220,6 @@ async function run() {
             const accounts = await AddedAccounts.find({}).toArray();
             res.send(accounts)
 
-            // const query = {}
-            // const cursor = AddedAccounts.find(query);
-            // const result = await cursor.toArray();
-            // res.send(result);
         })
 
         app.post('/addedAccount', async (req, res) => {
