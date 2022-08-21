@@ -49,7 +49,8 @@ async function run() {
         const AddedAccounts = client.db("poysha_pay").collection("Added_Accounts");
         const usersCollection = client.db('poysha_pay').collection('users')
         const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney')
-        const transationCollection = client.db('poysha_pay').collection('transation_history')
+        // const transationCollection = client.db('poysha_pay').collection('transation_history')
+        const userImageCollection = client.db('poysha_pay').collection('userimages');
 
 
         //Get all users
@@ -68,6 +69,7 @@ async function run() {
             res.send(id)
         })
 
+
         //user data load
         app.put('/users/:email', async (req, res) => {
             const email = req.params.email;
@@ -85,11 +87,11 @@ async function run() {
 
         //post sendMoney//
 
-        // app.post('/users', async (req, res) => {
-        //     const allUsers = req.body;
-        //     const result = await usersCollection.insertOne(allUsers);
-        //     res.send(result)
-        // })
+        app.post('/users', async (req, res) => {
+            const allUsers = req.body;
+            const result = await usersCollection.insertOne(allUsers);
+            res.send(result)
+        })
 
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
@@ -101,7 +103,6 @@ async function run() {
             }
 
             const result = await usersCollection.updateOne(filter, updateUser, options);
-
             res.send(result);
 
         })
@@ -126,11 +127,11 @@ async function run() {
             res.send(upDateBalance)
         })
 
-        app.post('/transationHistory', async (req, res) => {
-            const allTransation = req.body;
-            const result = await transationCollection.insertOne(allTransation);
-            res.send(result)
-        });
+        // app.post('/transationHistory', async (req, res) => {
+        //     const allTransation = req.body;
+        //     const result = await transationCollection.insertOne(allTransation);
+        //     res.send(result)
+        // });
 
         app.get('/sendMoney', async (req, res) => {
             const query = {};
@@ -138,10 +139,24 @@ async function run() {
             const sendMoney = await getAllSendmoney.toArray();
             res.send(sendMoney);
 
+        });
+
+        // GET TRANSACTION ALL STATEMENT ;
+        // app.get('/transactionStatement', async( req, res) =>{
+
+        // })
+
+
+        app.post('/userimage', async (req, res) => {
+            const userimage = req.body;
+            const result = await userImageCollection.insertOne(userimage);
+            res.send(result);
+        });
+
+        app.get('/userimage', async (req, res) => {
+            const userimages = await userImageCollection.find().toArray();
+            res.send(userimages);
         })
-
-
-
 
 
 
