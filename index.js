@@ -38,18 +38,20 @@ app.use(express.json());
 
 const uri = "mongodb+srv://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0.abru5.mongodb.net/?retryWrites=true&w=majority";
 // const uri = `mongodb://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0-shard-00-00.abru5.mongodb.net:27017,cluster0-shard-00-01.abru5.mongodb.net:27017,cluster0-shard-00-02.abru5.mongodb.net:27017/?ssl=true&replicaSet=atlas-ybe1bj-shard-0&authSource=admin&retryWrites=true&w=majority`;
-console.log(uri);
+
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 async function run() {
 
     try {
         await client.connect();
+        const addMoneyCollection = client.db('poysha_pay').collection('addMoney');
+        const transactionHistoryCollection = client.db('poysha_pay').collection('transaction_history');
+
         const transactionHistory = client.db("poysha_pay").collection("transaction_history");
         const AddedAccounts = client.db("poysha_pay").collection("Added_Accounts");
         const usersCollection = client.db('poysha_pay').collection('users')
         const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney')
-        // const transationCollection = client.db('poysha_pay').collection('transation_history')
         const userImageCollection = client.db('poysha_pay').collection('userimages');
 
 
@@ -63,7 +65,7 @@ async function run() {
             res.send(id)
         })
 
-        //post sendMoney//
+        
 
         app.post('/users', async (req, res) => {
             const allUsers = req.body;
@@ -91,28 +93,39 @@ async function run() {
             res.send(result)
         })
 
-        // app.post('/transationHistory', async (req, res) => {
-        //     const allTransation = req.body;
-        //     const result = await transationCollection.insertOne(allTransation);
-        //     res.send(result)
-        // });
 
-        app.get('/sendMoney', async (req, res) => {
+
+// ----------------------------------------------------------------------
+        // conditionally send transaction statement-----------------------
+        // GET TRANSACTION ALL STATEMENT ;
+
+        app.get('/transactionStatement', async (req, res) => {
+            const activeNumber = parseInt(req.query.activeNumber);
+            const showQuantity = parseInt(req.query.showQuantity);
             const query = {};
-            const getAllSendmoney = sendMoneyCollection.find(query);
-            const sendMoney = await getAllSendmoney.toArray();
-            res.send(sendMoney);
+            const getStatement = transactionHistory.find(query);
+            
+            let statement;
+            if(activeNumber || showQuantity){
+                statement = await getStatement.skip(activeNumber * showQuantity).limit(showQuantity).toArray();
+            }
+            else{
+                statement = await getStatement.toArray();
+            }
+            res.send(statement);
 
         });
 
-        // GET TRANSACTION ALL STATEMENT ;
-        app.get('/transactionStatement', async( req, res) =>{
+        
+        app.get('/statementCount', async( req, res) =>{
             const query = {};
-            const cursor = transactionHistory.find(query);
-            const count = await cursor.count();
+            const cursor = transactionHistory.find(query);            
+            const count = await transactionHistory.countDocuments();
             res.send({count})
 
         })
+        // ----------------------------------------------------------------------
+
 
 
         app.post('/userimage', async (req, res) => {
@@ -137,11 +150,6 @@ async function run() {
             res.send(accessToken);
 
         })
-
-        //add Money Collection
-        const addMoneyCollection = client.db('poysha_pay').collection('addMoney');
-        const transactionHistoryCollection = client.db('poysha_pay').collection('transaction_history');
-
 
 
         //visualize add Money all transactions
