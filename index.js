@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
 const port = process.env.PORT || 5000
@@ -53,14 +53,36 @@ async function run() {
         const userImageCollection = client.db('poysha_pay').collection('userimages');
 
 
-        //user
+        //Get all users
+        app.get('/users', async (req, res) => {
+            const query = {};
+            const userId = usersCollection.find(query)
+            const id = await userId.toArray();
+            res.send(id)
+        })
+        //Load single user data 
         app.get('/users/:email', async (req, res) => {
             const email = req.params.email;
-            console.log("email is", email);
             const query = { email: email };
             const userId = usersCollection.find(query)
             const id = await userId.toArray();
             res.send(id)
+        })
+
+
+        //user data load
+        app.put('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const balance = req.body
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    balance: balance
+                },
+            };
+            const upDateBalance = await usersCollection.updateOne(filter, updateDoc, options)
+            res.send(upDateBalance)
         })
 
         //post sendMoney//
@@ -85,10 +107,24 @@ async function run() {
 
         })
 
-        app.post('/sendMoney', async (req, res) => {
+        app.put('/sendMoney/:id', async (req, res) => {
+            const id = req.params.id;
             const allSendMoney = req.body;
             const result = await sendMoneyCollection.insertOne(allSendMoney);
-            res.send(result)
+            const reqMoney = allSendMoney.sendAmount
+            const userInfo = await usersCollection.findOne({ _id: ObjectId(id) })
+            const mainBalance = userInfo.balance;
+            const newBalance = mainBalance - reqMoney;
+            const options = { upsert: true };
+            const filter = { _id: ObjectId(id) }
+            const updateMoney = {
+                $set: {
+                    balance: newBalance
+                },
+            };
+            const upDateBalance = await usersCollection.updateOne(filter, updateMoney, options)
+            console.log(upDateBalance);
+            res.send(upDateBalance)
         })
 
         // app.post('/transationHistory', async (req, res) => {
@@ -150,11 +186,35 @@ async function run() {
 
 
         //send add money data to backend from ui
-        app.post('/addMoney', async (req, res) => {
+        app.put('/addMoney/:id', async (req, res) => {
+            const id = req.params.id;
             const addMoney = req.body;
-            const result = await addMoneyCollection.insertOne(addMoney);
-            res.send(result)
+            const reqAddAmount = parseInt(addMoney.transferredAmount);
+            const userInfo = await usersCollection.findOne({ _id: ObjectId(id) });
+            const mainBalance = parseInt(userInfo.balance);
+            const newBalance = parseInt(mainBalance + reqAddAmount);
+            const options = { upsert: true };
+            const filter = { _id: ObjectId(id) };
+            const addNewMoney = {
+                $set: {
+                    balance: newBalance
+                }
+            }
+            const upDateBalance = await usersCollection.updateOne(filter, addNewMoney, options)
+            const upDataDoc = {
+                $push: {
+                    addMoney: {
+                        addMoney
+                    }
+                }
+            }
+            const result = await usersCollection.updateOne(filter, upDataDoc);
+
+            res.send({ upDateBalance, result })
         })
+
+
+
         app.post('/transactionHistory', async (req, res) => {
             const transactionHistory = req.body;
             const result = await transactionHistoryCollection.insertOne(transactionHistory);
@@ -175,10 +235,6 @@ async function run() {
             const accounts = await AddedAccounts.find({}).toArray();
             res.send(accounts)
 
-            // const query = {}
-            // const cursor = AddedAccounts.find(query);
-            // const result = await cursor.toArray();
-            // res.send(result);
         })
 
         app.post('/addedAccount', async (req, res) => {
