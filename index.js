@@ -112,7 +112,14 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updateUser, options);
             res.send(result);
 
-        })
+        });
+// ----------------------------------------------------------
+        // send money ------------------
+        app.post('sendMoney',async(req,res) =>{
+            const allSendMoney = req.body;
+            const result = await sendMoneyCollection.insertOne(allSendMoney);
+            res.send(result);
+        });
 
         app.put('/sendMoney/:id', async (req, res) => {
             const id = req.params.id;
