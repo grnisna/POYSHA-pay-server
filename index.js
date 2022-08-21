@@ -115,8 +115,9 @@ async function run() {
         });
 // ----------------------------------------------------------
         // send money ------------------
-        app.post('sendMoney',async(req,res) =>{
+        app.post('/sendMoney', async(req,res) =>{
             const allSendMoney = req.body;
+            console.log(allSendMoney);
             const result = await sendMoneyCollection.insertOne(allSendMoney);
             res.send(result);
         });
