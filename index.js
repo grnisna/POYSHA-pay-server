@@ -52,6 +52,10 @@ async function run() {
         const AddedAccounts = client.db("poysha_pay").collection("Added_Accounts");
         const usersCollection = client.db('poysha_pay').collection('users')
         const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney')
+
+
+        const transationCollection = client.db('poysha_pay').collection('transation_history')
+
         const userImageCollection = client.db('poysha_pay').collection('userimages');
 
 
@@ -214,3 +218,4 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
     console.log(`Poysha-pay App is ready to transaction on port ${port}`)
 })
+
