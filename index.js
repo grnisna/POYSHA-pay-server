@@ -137,7 +137,7 @@ async function run() {
 
 
 // ----------------------------------------------------------------------
-        // conditionally send transaction statement-----------------------
+        // conditionally send transaction statement
         // GET TRANSACTION ALL STATEMENT ;
 
         app.get('/transactionStatement', async (req, res) => {
