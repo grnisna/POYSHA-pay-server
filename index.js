@@ -202,6 +202,31 @@ async function run() {
             res.send(addMoney)
         })
 
+        //all users visualization
+        app.get('/users', async (req, res) => {
+            const query = {};
+            const cursor = usersCollection.find(query);
+            const users = await cursor.toArray();
+            res.send(users)
+        })
+
+        //add Review 
+        app.post('/addReview', async (req, res) => {
+            const addReview = req.body;
+            const result = await addReviewCollection.insertOne(addReview);
+            res.send(result)
+        })
+
+
+
+        //all Review visualization
+        app.get('/addReview', async (req, res) => {
+            const query = {};
+            const cursor = addReviewCollection.find(query);
+            const addReview = await cursor.toArray();
+            res.send(addReview)
+        })
+
 
         //send add money data to backend from ui
         app.put('/addMoney/:id', async (req, res) => {
