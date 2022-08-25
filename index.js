@@ -51,12 +51,10 @@ async function run() {
         const transactionHistory = client.db("poysha_pay").collection("transaction_history");
         const AddedAccounts = client.db("poysha_pay").collection("Added_Accounts");
         const usersCollection = client.db('poysha_pay').collection('users')
-        const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney')
-
-
-        const transationCollection = client.db('poysha_pay').collection('transation_history')
-
+        const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney');
+        const transationCollection = client.db('poysha_pay').collection('transation_history');
         const userImageCollection = client.db('poysha_pay').collection('userimages');
+        const faqCollection = client.db('poysha_pay').collection("FAQ");
 
 
         //Get all users
@@ -73,7 +71,9 @@ async function run() {
             const userId = usersCollection.find(query)
             const id = await userId.toArray();
             res.send(id)
-        })
+        });
+
+
 
 
 
@@ -96,7 +96,7 @@ async function run() {
 
         app.post('/users', async (req, res) => {
             const allUsers = req.body;
-            const result = await usersCollection.insertOne(allUsers);
+            const result =  usersCollection.insertOne(allUsers);
             res.send(result)
         })
 
