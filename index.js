@@ -55,6 +55,7 @@ async function run() {
         const transationCollection = client.db('poysha_pay').collection('transation_history');
         const userImageCollection = client.db('poysha_pay').collection('userimages');
         const faqCollection = client.db('poysha_pay').collection("FAQ");
+        const addReviewCollection = client.db('poysha_pay').collection("addReview");
 
 
         //Get all users
@@ -72,9 +73,6 @@ async function run() {
             const id = await userId.toArray();
             res.send(id)
         });
-
-
-
 
 
         //user data load
@@ -104,7 +102,7 @@ async function run() {
             const email = req.params.email;
             const userInfo = req.body;
             const filter = { email: email };
-            const options = { ursert: true };
+            const options = { upsert: true };
             const updateUser = {
                 $set: { userInfo }
             }
