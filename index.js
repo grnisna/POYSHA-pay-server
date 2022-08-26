@@ -52,12 +52,14 @@ async function run() {
         const AddedAccounts = client.db("poysha_pay").collection("Added_Accounts");
         const usersCollection = client.db('poysha_pay').collection('users')
         const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney');
-        const transationCollection = client.db('poysha_pay').collection('transation_history');
         const userImageCollection = client.db('poysha_pay').collection('userimages');
         const faqCollection = client.db('poysha_pay').collection("FAQ");
         const addReviewCollection = client.db('poysha_pay').collection("addReview");
+        const bankCollection = client.db('poysha_pay').collection("banksName");
 
 
+
+        // ---------------------- USER INFO ----------------- 
         //Get all users
         app.get('/users', async (req, res) => {
             const query = {};
@@ -90,11 +92,11 @@ async function run() {
             res.send(upDateBalance)
         })
 
-        //post sendMoney//
+
 
         app.post('/users', async (req, res) => {
             const allUsers = req.body;
-            const result =  usersCollection.insertOne(allUsers);
+            const result = usersCollection.insertOne(allUsers);
             res.send(result)
         })
 
@@ -111,13 +113,33 @@ async function run() {
             res.send(result);
 
         });
-// ----------------------------------------------------------
+
+
+        // --------------------------  SEND MONEY-------------------------------
         // send money ------------------
-        app.post('/sendMoney', async(req,res) =>{
+        app.post('/sendMoney', async (req, res) => {
             const allSendMoney = req.body;
             console.log(allSendMoney);
             const result = await sendMoneyCollection.insertOne(allSendMoney);
             res.send(result);
+        });
+
+
+
+        app.get('/sendMoney', async (req, res) => {
+            const activeNumber = parseInt(req.query.activeNumber);
+            const showQuantity = parseInt(req.query.showQuantity);
+            const query = {};
+            const getSendMoneyStatement = sendMoneyCollection.find(query);
+
+            let statement;
+            if (activeNumber || showQuantity) {
+                statement = await getSendMoneyStatement.skip(activeNumber * showQuantity).limit(showQuantity).toArray();
+            }
+            else {
+                statement = await getSendMoneyStatement.toArray();
+            }
+            res.send(statement);
         });
 
         app.put('/sendMoney/:id', async (req, res) => {
@@ -141,8 +163,17 @@ async function run() {
         })
 
 
+        app.get('/sendMoneyStatementCount', async (req, res) => {
+            const query = {};
+            const cursor = sendMoneyCollection.find(query);
+            const count = await sendMoneyCollection.countDocuments();
+            res.send({ count })
 
-// ----------------------------------------------------------------------
+        })
+
+
+
+        // ----------------------------------TRANSACTION HISTORY------------------------------------
         // conditionally send transaction statement
         // GET TRANSACTION ALL STATEMENT ;
 
@@ -151,24 +182,24 @@ async function run() {
             const showQuantity = parseInt(req.query.showQuantity);
             const query = {};
             const getStatement = transactionHistory.find(query);
-            
+
             let statement;
-            if(activeNumber || showQuantity){
+            if (activeNumber || showQuantity) {
                 statement = await getStatement.skip(activeNumber * showQuantity).limit(showQuantity).toArray();
             }
-            else{
+            else {
                 statement = await getStatement.toArray();
             }
             res.send(statement);
 
         });
 
-        
-        app.get('/statementCount', async( req, res) =>{
+
+        app.get('/statementCount', async (req, res) => {
             const query = {};
-            const cursor = transactionHistory.find(query);            
+            const cursor = transactionHistory.find(query);
             const count = await transactionHistory.countDocuments();
-            res.send({count})
+            res.send({ count })
 
         })
         // ----------------------------------------------------------------------
@@ -199,15 +230,6 @@ async function run() {
         });
         // ======================================== 
 
-
-        //visualize add Money all transactions
-        app.get('/addMoneyTransactions', async (req, res) => {
-            const query = {};
-            const cursor = addMoneyCollection.find(query);
-            const addMoney = await cursor.toArray();
-            res.send(addMoney)
-        })
-
         //all users visualization
         app.get('/users', async (req, res) => {
             const query = {};
@@ -216,23 +238,44 @@ async function run() {
             res.send(users)
         })
 
-        //add Review 
-        app.post('/addReview', async (req, res) => {
-            const addReview = req.body;
-            const result = await addReviewCollection.insertOne(addReview);
+
+        // ----------------------- ADD MONEY ------------------------ ---------------
+
+        //visualize add Money all transactions
+        app.get('/addMoneyTransactions', async (req, res) => {
+            // const query = {};
+            // const cursor = addMoneyCollection.find(query);
+            // const addMoney = await cursor.toArray();
+            // res.send(addMoney)
+            const activeNumber = parseInt(req.query.activeNumber);
+            const showQuantity = parseInt(req.query.showQuantity);
+            const query = {};
+            const getAddMoneyStatement = addMoneyCollection.find(query);
+
+            let statement;
+            if (activeNumber || showQuantity) {
+                statement = await getAddMoneyStatement.skip(activeNumber * showQuantity).limit(showQuantity).toArray();
+            }
+            else {
+                statement = await getAddMoneyStatement.toArray();
+            }
+            res.send(statement);
+        });
+
+        app.get('/addMoneyStatementCount', async (req, res) => {
+            const query = {};
+            const cursor = addMoneyCollection.find(query);
+            const count = await addMoneyCollection.countDocuments();
+            res.send({ count })
+
+        })
+
+
+        app.post('/addMoney', async (req, res) => {
+            const addMoney = req.body;
+            const result = await addMoneyCollection.insertOne(addMoney);
             res.send(result)
         })
-
-
-
-        //all Review visualization
-        app.get('/addReview', async (req, res) => {
-            const query = {};
-            const cursor = addReviewCollection.find(query);
-            const addReview = await cursor.toArray();
-            res.send(addReview)
-        })
-
 
         //send add money data to backend from ui
         app.put('/addMoney/:id', async (req, res) => {
@@ -260,7 +303,44 @@ async function run() {
             const result = await usersCollection.updateOne(filter, upDataDoc);
 
             res.send({ upDateBalance, result })
+        });
+
+
+        // ------------------ADD REVIEW---------------
+
+        //add Review 
+        app.post('/addReview', async (req, res) => {
+            const addReview = req.body;
+            const result = await addReviewCollection.insertOne(addReview);
+            res.send(result)
         })
+
+
+        //all Review visualization
+        app.get('/addReview', async (req, res) => {
+            const query = {};
+            const cursor = addReviewCollection.find(query);
+            const addReview = await cursor.toArray();
+            res.send(addReview)
+        });
+
+        // ----------------------------------- 
+
+
+        // bank name ----------------------------
+
+        app.get('/banksName', async (req, res) => {
+            const query = {};
+            const cursor = bankCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+
+
+        })
+
+
+
+
 
 
 
