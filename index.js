@@ -59,7 +59,9 @@ async function run() {
 
 
 
-        // ---------------------- USER INFO ----------------- 
+        //===============================================================================================
+        // ---------------------- USER INFO ---------------
+        // ------------------------------------------------
         //Get all users
         app.get('/users', async (req, res) => {
             const query = {};
@@ -102,21 +104,58 @@ async function run() {
 
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
-            const userInfo = req.body;
+            const name = req.body;
             const filter = { email: email };
             const options = { upsert: true };
             const updateUser = {
-                $set: { userInfo }
+                $set: { name:name }
             }
 
             const result = await usersCollection.updateOne(filter, updateUser, options);
             res.send(result);
 
         });
+        
 
 
-        // --------------------------  SEND MONEY-------------------------------
-        // send money ------------------
+        // ==========================================================================================
+        // ------------upload profile photo ----------------
+        app.post('/userimage', async (req, res) => {
+            const userimage = req.body;
+            const result = await userImageCollection.insertOne(userimage);
+            res.send(result);
+        });
+
+        app.get('/userimage', async (req, res) => {
+            const userimages = await userImageCollection.find().toArray();
+            res.send(userimages);
+        })
+
+
+
+        //========== AUTHENTICATION ===================================================================
+        app.post('/login', async (req, res) => {
+            const user = req.body;
+            const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN, {
+                expiresIn: '1d'
+            });
+            res.send(accessToken);
+
+        });
+        // =================================================================================================
+
+        //all users visualization
+        app.get('/users', async (req, res) => {
+            const query = {};
+            const cursor = usersCollection.find(query);
+            const users = await cursor.toArray();
+            res.send(users)
+        });
+
+
+        // ==================================================================================================
+        // --------------------------  SEND MONEY------------
+        // send money ----------------------------------------
         app.post('/sendMoney', async (req, res) => {
             const allSendMoney = req.body;
             console.log(allSendMoney);
@@ -169,84 +208,15 @@ async function run() {
             const count = await sendMoneyCollection.countDocuments();
             res.send({ count })
 
-        })
-
-
-
-        // ----------------------------------TRANSACTION HISTORY------------------------------------
-        // conditionally send transaction statement
-        // GET TRANSACTION ALL STATEMENT ;
-
-        app.get('/transactionStatement', async (req, res) => {
-            const activeNumber = parseInt(req.query.activeNumber);
-            const showQuantity = parseInt(req.query.showQuantity);
-            const query = {};
-            const getStatement = transactionHistory.find(query);
-
-            let statement;
-            if (activeNumber || showQuantity) {
-                statement = await getStatement.skip(activeNumber * showQuantity).limit(showQuantity).toArray();
-            }
-            else {
-                statement = await getStatement.toArray();
-            }
-            res.send(statement);
-
         });
 
+        // ==================================================================================================
 
-        app.get('/statementCount', async (req, res) => {
-            const query = {};
-            const cursor = transactionHistory.find(query);
-            const count = await transactionHistory.countDocuments();
-            res.send({ count })
-
-        })
-        // ----------------------------------------------------------------------
-
-
-
-        app.post('/userimage', async (req, res) => {
-            const userimage = req.body;
-            const result = await userImageCollection.insertOne(userimage);
-            res.send(result);
-        });
-
-        app.get('/userimage', async (req, res) => {
-            const userimages = await userImageCollection.find().toArray();
-            res.send(userimages);
-        })
-
-
-
-        //========== AUTHENTICATION =======================
-        app.post('/login', async (req, res) => {
-            const user = req.body;
-            const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN, {
-                expiresIn: '1d'
-            });
-            res.send(accessToken);
-
-        });
-        // ======================================== 
-
-        //all users visualization
-        app.get('/users', async (req, res) => {
-            const query = {};
-            const cursor = usersCollection.find(query);
-            const users = await cursor.toArray();
-            res.send(users)
-        })
-
-
-        // ----------------------- ADD MONEY ------------------------ ---------------
+        // ----------------------- ADD MONEY -----------------
+        // ---------------------------------------------------
 
         //visualize add Money all transactions
         app.get('/addMoneyTransactions', async (req, res) => {
-            // const query = {};
-            // const cursor = addMoneyCollection.find(query);
-            // const addMoney = await cursor.toArray();
-            // res.send(addMoney)
             const activeNumber = parseInt(req.query.activeNumber);
             const showQuantity = parseInt(req.query.showQuantity);
             const query = {};
@@ -305,8 +275,63 @@ async function run() {
             res.send({ upDateBalance, result })
         });
 
+        // bank name ----------------------------
 
-        // ------------------ADD REVIEW---------------
+        app.get('/banksName', async (req, res) => {
+            const query = {};
+            const cursor = bankCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+
+
+        })
+
+        // ==================================================================================================
+        // --------------TRANSACTION HISTORY---------
+        // ------------------------------------------
+
+        app.get('/transactionStatement', async (req, res) => {
+            const activeNumber = parseInt(req.query.activeNumber);
+            const showQuantity = parseInt(req.query.showQuantity);
+            const query = {};
+            const getStatement = transactionHistory.find(query);
+
+            let statement;
+            if (activeNumber || showQuantity) {
+                statement = await getStatement.skip(activeNumber * showQuantity).limit(showQuantity).toArray();
+            }
+            else {
+                statement = await getStatement.toArray();
+            }
+            res.send(statement);
+
+        });
+
+
+        app.get('/statementCount', async (req, res) => {
+            const query = {};
+            const cursor = transactionHistory.find(query);
+            const count = await transactionHistory.countDocuments();
+            res.send({ count })
+
+        });
+        app.post('/transactionHistory', async (req, res) => {
+            const transactionHistory = req.body;
+            const result = await transactionHistoryCollection.insertOne(transactionHistory);
+            res.send(result)
+        })
+
+
+        app.get('/transactionHistory', async (req, res) => {
+            const query = {}
+            const cursor = transactionHistory.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        // ==================================================================================================
+        // ------------------ADD REVIEW------------------------------
+        // ----------------------------------------------------------
 
         //add Review 
         app.post('/addReview', async (req, res) => {
@@ -324,40 +349,10 @@ async function run() {
             res.send(addReview)
         });
 
-        // ----------------------------------- 
 
-
-        // bank name ----------------------------
-
-        app.get('/banksName', async (req, res) => {
-            const query = {};
-            const cursor = bankCollection.find(query);
-            const result = await cursor.toArray();
-            res.send(result);
-
-
-        })
-
-
-
-
-
-
-
-        app.post('/transactionHistory', async (req, res) => {
-            const transactionHistory = req.body;
-            const result = await transactionHistoryCollection.insertOne(transactionHistory);
-            res.send(result)
-        })
-
-
-        app.get('/transactionHistory', async (req, res) => {
-            const query = {}
-            const cursor = transactionHistory.find(query);
-            const result = await cursor.toArray();
-            res.send(result);
-        })
-
+        // ==================================================================================================
+        // ----------------------Add Account------------- 
+        // --------------------------------------------- 
         //added any account to user database
 
         app.get('/addedAccount', async (req, res) => {
@@ -370,7 +365,8 @@ async function run() {
             const data = req.body;
             const addedAccount = await AddedAccounts.insertOne(data)
             res.send(addedAccount);
-        })
+        });
+        // ===============================================
 
     } finally {
 
