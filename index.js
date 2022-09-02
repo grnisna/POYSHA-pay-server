@@ -36,7 +36,9 @@ app.use(express.json());
 
 
 
-const uri = "mongodb+srv://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0.abru5.mongodb.net/?retryWrites=true&w=majority";
+// const uri = "mongodb+srv://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0.abru5.mongodb.net/?retryWrites=true&w=majority";
+
+const uri = "mongodb+srv://POYSHAPAY:POYSHAPAY@server2.rlederc.mongodb.net/?retryWrites=true&w=majority";
 // const uri = `mongodb://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0-shard-00-00.abru5.mongodb.net:27017,cluster0-shard-00-01.abru5.mongodb.net:27017,cluster0-shard-00-02.abru5.mongodb.net:27017/?ssl=true&replicaSet=atlas-ybe1bj-shard-0&authSource=admin&retryWrites=true&w=majority`;
 console.log(uri);
 
@@ -47,7 +49,7 @@ async function run() {
         await client.connect();
         const transactionHistory = client.db("poysha_pay").collection("transaction_history");
         const AddedAccounts = client.db("poysha_pay").collection("Added_Accounts");
-        const usersCollection = client.db('poysha_pay').collection('users')
+        const usersCollection = client.db('test').collection('users')
         const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney')
         const transationCollection = client.db('poysha_pay').collection('transation_history')
         const userImageCollection = client.db('poysha_pay').collection('userimages');
@@ -62,13 +64,49 @@ async function run() {
             const id = await userId.toArray();
             res.send(id)
         })
+
+        app.get('/user', async (req, res) => {
+            const query = {}
+            const cursor = usersCollection.find(query);
+            const users = await cursor.toArray();
+            console.log(users);
+            res.send(users);
+
+        });
+
+        app.get(`/user/:${id}`, async (req, res) => {
+            const id = req.params._id;
+            const query = { id: id }
+            const userId = usersCollection.find(query);
+            const userInfo = await userId.toArray();
+            console.log(userInfo);
+            res.send(userInfo);
+
+        });
+
+
+        // app.delete('/addedAccount/:id', async (req, res) => {
+        //     const id = req.params._id;
+        //     const filter = { id: id }
+        //     const result = await AddedAccounts.deleteOne(filter);
+        //     res.send(result);
+        // });
+
+
+
+
+
         //post sendMoney//
 
-        // app.post('/users', async (req, res) => {
-        //     const allUsers = req.body;
-        //     const result = await usersCollection.insertOne(allUsers);
-        //     res.send(result)
-        // })
+        app.post('/users', async (req, res) => {
+            const allUsers = req.body;
+            const result = await usersCollection.insertOne(allUsers);
+            res.send(result)
+        })
+
+
+
+
 
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
@@ -180,6 +218,16 @@ async function run() {
             const addedAccount = await AddedAccounts.insertOne(data)
             res.send(addedAccount);
         })
+
+        app.delete('/addedAccount/:id', async (req, res) => {
+            const id = req.params._id;
+            const filter = { id: id }
+            const result = await AddedAccounts.deleteOne(filter);
+            res.send(result);
+        });
+
+
+
 
     } finally {
 
