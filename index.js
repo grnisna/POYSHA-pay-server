@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
 const port = process.env.PORT || 5000
@@ -40,25 +40,37 @@ app.use(express.json());
 
 const uri = "mongodb+srv://POYSHAPAY:POYSHAPAY@server2.rlederc.mongodb.net/?retryWrites=true&w=majority";
 // const uri = `mongodb://poysha_pay:ZsRHFYCpIVJa4UrI@cluster0-shard-00-00.abru5.mongodb.net:27017,cluster0-shard-00-01.abru5.mongodb.net:27017,cluster0-shard-00-02.abru5.mongodb.net:27017/?ssl=true&replicaSet=atlas-ybe1bj-shard-0&authSource=admin&retryWrites=true&w=majority`;
-console.log(uri);
+
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 async function run() {
 
     try {
         await client.connect();
+        const addMoneyCollection = client.db('poysha_pay').collection('addMoney');
+        const transactionHistoryCollection = client.db('poysha_pay').collection('transaction_history');
+
         const transactionHistory = client.db("poysha_pay").collection("transaction_history");
         const AddedAccounts = client.db("poysha_pay").collection("Added_Accounts");
         const usersCollection = client.db('test').collection('users')
         const sendMoneyCollection = client.db('poysha_pay').collection('sendMoney')
+
+
         const transationCollection = client.db('poysha_pay').collection('transation_history')
+
         const userImageCollection = client.db('poysha_pay').collection('userimages');
 
 
-        //user
+        //Get all users
+        app.get('/users', async (req, res) => {
+            const query = {};
+            const userId = usersCollection.find(query)
+            const id = await userId.toArray();
+            res.send(id)
+        })
+        //Load single user data 
         app.get('/users/:email', async (req, res) => {
             const email = req.params.email;
-            console.log("email is", email);
             const query = { email: email };
             const userId = usersCollection.find(query)
             const id = await userId.toArray();
@@ -96,6 +108,22 @@ async function run() {
 
 
 
+
+        //user data load
+        app.put('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const balance = req.body
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    balance: balance
+                },
+            };
+            const upDateBalance = await usersCollection.updateOne(filter, updateDoc, options)
+            res.send(upDateBalance)
+        })
+
         //post sendMoney//
 
         app.post('/users', async (req, res) => {
@@ -122,25 +150,59 @@ async function run() {
 
         })
 
-        app.post('/sendMoney', async (req, res) => {
+        app.put('/sendMoney/:id', async (req, res) => {
+            const id = req.params.id;
             const allSendMoney = req.body;
             const result = await sendMoneyCollection.insertOne(allSendMoney);
-            res.send(result)
+            const reqMoney = allSendMoney.sendAmount
+            const userInfo = await usersCollection.findOne({ _id: ObjectId(id) })
+            const mainBalance = userInfo.balance;
+            const newBalance = mainBalance - reqMoney;
+            const options = { upsert: true };
+            const filter = { _id: ObjectId(id) }
+            const updateMoney = {
+                $set: {
+                    balance: newBalance
+                },
+            };
+            const upDateBalance = await usersCollection.updateOne(filter, updateMoney, options)
+            console.log(upDateBalance);
+            res.send(upDateBalance)
         })
 
-        app.post('/transationHistory', async (req, res) => {
-            const allTransation = req.body;
-            const result = await transationCollection.insertOne(allTransation);
-            res.send(result)
+
+
+        // ----------------------------------------------------------------------
+        // conditionally send transaction statement-----------------------
+        // GET TRANSACTION ALL STATEMENT ;
+
+        app.get('/transactionStatement', async (req, res) => {
+            const activeNumber = parseInt(req.query.activeNumber);
+            const showQuantity = parseInt(req.query.showQuantity);
+            const query = {};
+            const getStatement = transactionHistory.find(query);
+
+            let statement;
+            if (activeNumber || showQuantity) {
+                statement = await getStatement.skip(activeNumber * showQuantity).limit(showQuantity).toArray();
+            }
+            else {
+                statement = await getStatement.toArray();
+            }
+            res.send(statement);
+
         });
 
-        app.get('/sendMoney', async (req, res) => {
+
+        app.get('/statementCount', async (req, res) => {
             const query = {};
-            const getAllSendmoney = sendMoneyCollection.find(query);
-            const sendMoney = await getAllSendmoney.toArray();
-            res.send(sendMoney);
+            const cursor = transactionHistory.find(query);
+            const count = await transactionHistory.countDocuments();
+            res.send({ count })
 
         })
+        // ----------------------------------------------------------------------
+
 
 
         app.post('/userimage', async (req, res) => {
@@ -164,12 +226,8 @@ async function run() {
             });
             res.send(accessToken);
 
-        })
-
-        //add Money Collection
-        const addMoneyCollection = client.db('poysha_pay').collection('addMoney');
-        const transactionHistoryCollection = client.db('poysha_pay').collection('transaction_history');
-
+        });
+        // ======================================== 
 
 
         //visualize add Money all transactions
@@ -180,13 +238,62 @@ async function run() {
             res.send(addMoney)
         })
 
+        //all users visualization
+        app.get('/users', async (req, res) => {
+            const query = {};
+            const cursor = usersCollection.find(query);
+            const users = await cursor.toArray();
+            res.send(users)
+        })
 
-        //send add money data to backend from ui
-        app.post('/addMoney', async (req, res) => {
-            const addMoney = req.body;
-            const result = await addMoneyCollection.insertOne(addMoney);
+        //add Review 
+        app.post('/addReview', async (req, res) => {
+            const addReview = req.body;
+            const result = await addReviewCollection.insertOne(addReview);
             res.send(result)
         })
+
+
+
+        //all Review visualization
+        app.get('/addReview', async (req, res) => {
+            const query = {};
+            const cursor = addReviewCollection.find(query);
+            const addReview = await cursor.toArray();
+            res.send(addReview)
+        })
+
+
+        //send add money data to backend from ui
+        app.put('/addMoney/:id', async (req, res) => {
+            const id = req.params.id;
+            const addMoney = req.body;
+            const reqAddAmount = parseInt(addMoney.transferredAmount);
+            const userInfo = await usersCollection.findOne({ _id: ObjectId(id) });
+            const mainBalance = parseInt(userInfo.balance);
+            const newBalance = parseInt(mainBalance + reqAddAmount);
+            const options = { upsert: true };
+            const filter = { _id: ObjectId(id) };
+            const addNewMoney = {
+                $set: {
+                    balance: newBalance
+                }
+            }
+            const upDateBalance = await usersCollection.updateOne(filter, addNewMoney, options)
+            const upDataDoc = {
+                $push: {
+                    addMoney: {
+                        addMoney
+                    }
+                }
+            }
+            const result = await usersCollection.updateOne(filter, upDataDoc);
+
+            res.send({ upDateBalance, result })
+        })
+
+
+
         app.post('/transactionHistory', async (req, res) => {
             const transactionHistory = req.body;
             const result = await transactionHistoryCollection.insertOne(transactionHistory);
@@ -207,10 +314,6 @@ async function run() {
             const accounts = await AddedAccounts.find({}).toArray();
             res.send(accounts)
 
-            // const query = {}
-            // const cursor = AddedAccounts.find(query);
-            // const result = await cursor.toArray();
-            // res.send(result);
         })
 
         app.post('/addedAccount', async (req, res) => {
@@ -244,3 +347,4 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
     console.log(`Poysha-pay App is ready to transaction on port ${port}`)
 })
+
